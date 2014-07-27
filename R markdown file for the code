@@ -1,0 +1,99 @@
+R code used in Assignment 1  
+========================================================
+# Set the working directory
+
+setwd("C:\\Windows\\System32\\config\\systemprofile\\Downloads")
+
+# Read the train and test data
+
+train=read.csv("pml-training.csv")
+test=read.csv("pml-testing.csv")
+
+# Split the train data for cross validation 
+train_model=createDataPartition(y=train$classe,p=0.7,list=FALSE)
+train_split_model=train[train_model,]
+train_split_Cross_val=train[-train_model,]
+
+set.seed(1000)
+
+# Build RF Model on 70% of train data [splitted into 70:30 ratio]  
+train_split_model.rf=train(classe~
+                        raw_timestamp_part_1  +
+                        raw_timestamp_part_2  +
+                        #cvtd_timestamp  +
+                        num_window  +
+                        roll_belt  +
+                        pitch_belt	+
+                        yaw_belt	+
+                        total_accel_belt	+
+                        gyros_belt_x	+
+                        gyros_belt_y	+
+                        gyros_belt_z	+
+                        accel_belt_x	+
+                        accel_belt_y	+
+                        accel_belt_z	+
+                        magnet_belt_x	+
+                        magnet_belt_y	+
+                        magnet_belt_z	+
+                        roll_arm	+
+                        pitch_arm	+
+                        yaw_arm	+
+                        total_accel_arm	+
+                        gyros_arm_x	+
+                        gyros_arm_y	+
+                        gyros_arm_z	+
+                        accel_arm_x	+
+                        accel_arm_y	+
+                        accel_arm_z	+
+                        magnet_arm_x	+
+                        magnet_arm_y	+
+                        magnet_arm_z	+
+                        roll_dumbbell	+
+                        pitch_dumbbell	+
+                        yaw_dumbbell	+
+                        total_accel_dumbbell	+
+                        gyros_dumbbell_x	+
+                        gyros_dumbbell_y	+
+                        gyros_dumbbell_z	+
+                        accel_dumbbell_x	+
+                        accel_dumbbell_y	+
+                        accel_dumbbell_z	+
+                        magnet_dumbbell_x	+
+                        magnet_dumbbell_y	+
+                        magnet_dumbbell_z	+
+                        roll_forearm	+
+                        pitch_forearm	+
+                        yaw_forearm	+
+                        total_accel_forearm	+
+                        gyros_forearm_x	+
+                        gyros_forearm_y	+
+                        gyros_forearm_z	+
+                        accel_forearm_x	+
+                        accel_forearm_y	+
+                        accel_forearm_z	+
+                        magnet_forearm_x	+
+                        magnet_forearm_y	+
+                        magnet_forearm_z,
+                      data=train_new,method="rf",importance=TRUE,do.trace=TRUE)
+
+# Cross validting on the remining 30% of train data
+
+pred=predict(train_split_model.rf,train_split_cross_val)
+testing$right_prediction=pred==train_split_cross_val$classe
+table(pred,train_split_cross_val$classe)
+
+# Predict the test cases using the above RF model
+test_predict=predict(train_split_model.rf,test)   
+n=test$problem_id
+final=cbind(n,test_predict)
+write.csv(final,"final.csv")
+
+# Create submission files
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(test_predict)
